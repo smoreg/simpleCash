@@ -18,7 +18,7 @@ type Cash struct {
 }
 
 func (c *Cash) GetCashStruct(num int, v interface{}) (exist bool) {
-	c.setName()
+	c.setName(false)
 	fullname := fmt.Sprintf("%s%s_%d.json", os.TempDir(), c.currentName, num)
 	if !fileExists(fullname) {
 		return false
@@ -33,8 +33,8 @@ func (c *Cash) GetCashStruct(num int, v interface{}) (exist bool) {
 	return true
 }
 
-func (c *Cash) SetCash(num int, data interface{}) {
-	c.setName()
+func (c *Cash) SetCash(num int, data interface{}, isDefer bool) {
+	c.setName(isDefer)
 	fullname := fmt.Sprintf("%s%s_%d.json", os.TempDir(), c.currentName, num)
 	marshal, err := json.Marshal(data)
 	if err != nil {
@@ -46,9 +46,14 @@ func (c *Cash) SetCash(num int, data interface{}) {
 	return
 }
 
-func (c *Cash) setName() {
+func (c *Cash) setName(isDefer bool) {
 	pc := make([]uintptr, 10) // at least 1 entry needed
-	runtime.Callers(3, pc)
+
+	skip := 3
+	if isDefer {
+		skip++
+	}
+	runtime.Callers(skip, pc)
 	f := runtime.FuncForPC(pc[0])
 	c.currentName = f.Name()
 	return
